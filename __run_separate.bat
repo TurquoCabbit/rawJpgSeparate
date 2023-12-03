@@ -1,0 +1,1 @@
+python .\__rawJpgSeparate\rawJpgSeparate.py
