@@ -1,1 +1,1 @@
-python .\__rawJpgSeparate\rawJpgSeparate.py
+python .\rawJpgSeparate\rawJpgSeparate.py jpeg

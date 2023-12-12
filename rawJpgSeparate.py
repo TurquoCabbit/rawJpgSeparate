@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 
 
@@ -15,50 +16,72 @@ ERR_ok = 0
 ERR_dir_error = 1
 ERR_mkdir_error = 2
 
-
-def separate_file(dir:str, fExt1:str, fExt2:str) -> int:
+def pick_file(dir:str, fExt:str):
 
     if not os.path.isdir(dir):
         return 1
     
-    fExt1 = fExt1.upper()
-    fExt2 = fExt2.upper()
-    
-    if not os.path.isdir('{}\{}'.format(dir, fExt1)):
-        if os.makedirs('{}\{}'.format(dir, fExt1)) != None:
-            return ERR_mkdir_error
-        
-    if not os.path.isdir('{}\{}'.format(dir, fExt2)):
-        if os.makedirs('{}\{}'.format(dir, fExt2)) != None:
-            return ERR_mkdir_error
-    
-    for f in os.listdir(dir):
-        if f.endswith('.' + fExt1):
-            shutil.move('{}\{}'.format(dir, f), '{}\{}\{}'.format(dir, fExt1, f))
+    fExt = fExt.upper()
             
-        if f.endswith('.' + fExt2):
-            shutil.move('{}\{}'.format(dir, f), '{}\{}\{}'.format(dir, fExt2, f))
+    for f in os.listdir(dir):
+        if os.path.isdir('{}\{}'.format(dir, f)):
+            continue
 
+        actualExt = f.split('.')[-1]
+        if actualExt.upper() == fExt:
+
+            if not os.path.isdir('{}\{}'.format(dir, fExt)):
+                if os.makedirs('{}\{}'.format(dir, fExt)) != None:
+                    return ERR_mkdir_error
+                
+            shutil.move('{}\{}'.format(dir, f), '{}\{}\{}'.format(dir, actualExt, f))
+            
     return 0
+
+def pick_multi_file(dir:str, fExtList:list[str]):
+    ret = ERR_ok
+    
+    for i in fExtList:
+
+        ret = pick_file(dir, i)
+
+        if ret != ERR_ok:
+            return ret, i
+        
+    return ERR_ok, ''
 
 
 if __name__ == '__main__':
+    fileExtension = sys.argv[1:]
+
+    print('Pick out file extension: ', end='')
+
+    for i in fileExtension:
+        print('.{} '.format(i), end='')
+
+    print('')
+
+
     root_folders = list_folder('.')
 
     for index, value in enumerate(root_folders):
         print('  {:02d}: {}'.format(index, value))
-
-    choose_id = input('enter folder id to separate NFE and JPG:')
+    
+    choose_id = input('enter folder id to process pick out: ')
     choose_id.split()
-    choose_id = [int(item) for item in choose_id if item.isdigit()]
 
     for i in choose_id:
+        
+        if not i.isdigit():
+            continue
+
+        i = int(i)
         if i >= len(root_folders):
             break
         
-        ret = separate_file(root_folders[i], 'NEF', 'JPG')
-        if ret:
-            print('Unable to process folder:{}, error id: {}'.format(root_folders[i], ret))
+        ret, ext = pick_multi_file(root_folders[i], fileExtension)
+        if ret != ERR_ok:
+            print('Unable to pick {} from folder:{}, error id: {}'.format(ext, root_folders[i], ret))
 
     os.system('pause')
     
