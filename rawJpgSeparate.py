@@ -1,13 +1,20 @@
 import os
 import sys
 import shutil
+import ntpath
+
+def path_conv(path):
+    if sys.platform.startswith('darwin'):
+        return path.replace(ntpath.sep, os.sep)
+    elif sys.platform.startswith('win'):
+        return path.replace(os.sep, ntpath.sep)
 
 
 def list_folder(dir:str) -> list[str]:
     ret_list = []
 
     for i in os.listdir(dir):
-        if not i.startswith('__'):
+        if not i.startswith('__') and not i.startswith('.'):
             ret_list.append(i)
 
     return ret_list
@@ -16,34 +23,39 @@ ERR_ok = 0
 ERR_dir_error = 1
 ERR_mkdir_error = 2
 
-def pick_file(dir:str, fExt:str):
+def pick_file(dir:str, fExt:str, folder:str = None):
 
     if not os.path.isdir(dir):
         return 1
     
     fExt = fExt.upper()
-            
-    for f in os.listdir(dir):
-        if os.path.isdir('{}\{}'.format(dir, f)):
-            continue
+    
+    if folder == None:
+        folde_name = fExt
+    else:
+        folde_name = folder
 
+    if not os.path.isdir(path_conv('{}\\{}'.format(dir, folde_name))):
+        if os.makedirs(path_conv('{}\\{}'.format(dir, folde_name))) != None:
+            return ERR_mkdir_error
+        
+        
+    for f in os.listdir(dir):
+        if os.path.isdir(path_conv('{}\\{}'.format(dir, f))):
+            continue
+            
         actualExt = f.split('.')[-1]
         if actualExt.upper() == fExt:
-
-            if not os.path.isdir('{}\{}'.format(dir, fExt)):
-                if os.makedirs('{}\{}'.format(dir, fExt)) != None:
-                    return ERR_mkdir_error
-                
-            shutil.move('{}\{}'.format(dir, f), '{}\{}\{}'.format(dir, actualExt, f))
+            # print(path_conv('{}\\{}'.format(dir, f)), path_conv('{}\\{}\\{}'.format(dir, folde_name, f)))
+            shutil.move(path_conv('{}\\{}'.format(dir, f)), path_conv('{}\\{}\\{}'.format(dir, folde_name, f)))
             
     return 0
 
-def pick_multi_file(dir:str, fExtList:list[str]):
+def pick_multi_file(dir:str, fExtList:list[str], folder:str = None):
     ret = ERR_ok
     
     for i in fExtList:
-
-        ret = pick_file(dir, i)
+        ret = pick_file(dir, i, folder)
 
         if ret != ERR_ok:
             return ret, i
@@ -79,9 +91,9 @@ if __name__ == '__main__':
         if i >= len(root_folders):
             break
         
-        ret, ext = pick_multi_file(root_folders[i], fileExtension)
+        ret, ext = pick_multi_file(root_folders[i], fileExtension, 'cameraJPG')
         if ret != ERR_ok:
             print('Unable to pick {} from folder:{}, error id: {}'.format(ext, root_folders[i], ret))
 
-    os.system('pause')
     
+exit(0)
