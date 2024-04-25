@@ -14,7 +14,7 @@ def list_folder(dir:str) -> list[str]:
     ret_list = []
 
     for i in os.listdir(dir):
-        if not i.startswith('__') and not i.startswith('.'):
+        if os.path.isdir(i) and not i.startswith('__') and not i.startswith('.'):
             ret_list.append(i)
 
     return ret_list
