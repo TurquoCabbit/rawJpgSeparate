@@ -35,7 +35,7 @@ if __name__ == '__main__':
         print('  {:02d}: {}'.format(index, value))
     
     choose_id = input('enter folder id to process rename: ')
-    choose_id.split()
+    choose_id = choose_id.split()
 
     for i in choose_id:
 
